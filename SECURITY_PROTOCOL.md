@@ -14,7 +14,7 @@ This repository contains client-side cryptographic primitives only. It performs 
 1. Client generates a fresh ephemeral X25519 key pair and 32-byte random client nonce.
 2. Client sends ClientHello containing protocol/suite identifiers, ephemeral public key in DER SubjectPublicKeyInfo format, and client nonce.
 3. Backend generates a fresh ephemeral X25519 key pair, 32-byte server nonce, and unique session ID.
-4. Backend signs the canonical transcript (see HandshakeTranscript.kt) with its long-term signing key held in KMS/HSM. The signature covers both ephemeral public keys, both nonces, protocol/suite identifiers, session ID and signing key ID.
+4. Backend signs the canonical transcript (see HandshakeTranscript.kt) with Ed25519 using its long-term signing key held in KMS/HSM. ServerHello declares signatureAlgorithm = Ed25519. The signature covers both ephemeral public keys, both nonces, protocol/suite identifiers, session ID, signing key ID and signature algorithm.
 5. Client verifies the signature using its pre-trusted server signing key before accepting the server ephemeral key.
 6. Both sides compute X25519(client ephemeral private key, server ephemeral public key).
 7. Both derive independent 32-byte keys using HKDF-SHA256, salt = clientNonce || serverNonce, and info labels:
