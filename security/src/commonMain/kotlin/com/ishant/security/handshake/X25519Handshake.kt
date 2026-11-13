@@ -39,6 +39,7 @@ class X25519Handshake {
             serverHello.signingKeyId.isBlank() || serverHello.serverEphemeralPublicKey.isEmpty()
         ) throw SecurityError.InvalidHandshake("Incomplete server hello")
 
+        val privateKey = pending.consumePrivateKey()
         val transcript = HandshakeTranscript.encode(pending.clientHello, serverHello)
         if (!verifier.verify(serverHello.signingKeyId, transcript, serverHello.signature)) {
             throw SecurityError.HandshakeAuthenticationFailed
@@ -47,7 +48,7 @@ class X25519Handshake {
         return try {
             val serverPublic = xdh.publicKeyDecoder(XDH.Curve.X25519)
                 .decodeFromByteArray(XDH.PublicKey.Format.DER, serverHello.serverEphemeralPublicKey)
-            val sharedSecret = pending.privateKey.sharedSecretGenerator()
+            val sharedSecret = privateKey.sharedSecretGenerator()
                 .generateSharedSecretToByteArray(serverPublic)
             val salt = pending.clientHello.clientNonce + serverHello.serverNonce
             val hkdf = provider.get(HKDF)
@@ -80,5 +81,11 @@ class X25519Handshake {
 
 class PendingClientHandshake internal constructor(
     val clientHello: ClientHello,
-    internal val privateKey: XDH.PrivateKey
-)
+    privateKey: XDH.PrivateKey
+) {
+    private var privateKey: XDH.PrivateKey? = privateKey
+
+    internal fun consumePrivateKey(): XDH.PrivateKey =
+        privateKey?.also { privateKey = null }
+            ?: throw SecurityError.InvalidHandshake("Client handshake has already been consumed")
+}
