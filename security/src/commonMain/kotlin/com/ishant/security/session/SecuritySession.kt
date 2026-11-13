@@ -13,7 +13,8 @@ import kotlinx.serialization.Serializable
  *
  * Request and response operations are serialized independently. This guarantees
  * unique, ordered sequence assignment for concurrent callers in each direction.
- * Do not call [close] concurrently with an in-flight operation.
+ * [close] is suspending and waits for both directions to become idle before
+ * zeroing key material.
  */
 class SecuritySession internal constructor(
     val sessionId: String,
@@ -55,11 +56,15 @@ class SecuritySession internal constructor(
             plaintext
         }
 
-    fun close() {
-        if (!closed) {
-            closed = true
-            requestKey.clear()
-            responseKey.clear()
+    suspend fun close() {
+        requestMutex.withLock {
+            responseMutex.withLock {
+                if (!closed) {
+                    closed = true
+                    requestKey.clear()
+                    responseKey.clear()
+                }
+            }
         }
     }
 
