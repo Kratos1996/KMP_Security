@@ -17,7 +17,7 @@ This repository contains client-side cryptographic primitives only. It performs 
 - Register the public key and key ID with the backend. For proof of possession, the backend issues a fresh, unpredictable, single-use challenge over TLS; the app signs the exact challenge and returns the signature.
 - Backend verifies the challenge signature against the registered public key, enforces expiry/single use, and binds the identity to the authenticated account/device record.
 - Logout does not automatically delete the installation identity. Delete it only during explicit device de-registration, app reset, or a reviewed key-rotation flow.
-- Android implementation is provided by `AndroidDeviceIdentityKeyStore` in `androidMain` and uses Android Keystore with a P-256 signing key. The iOS adapter is not implemented yet; do not use an in-memory/software private key as a production substitute. Backend challenge endpoints remain integration work.
+- Android implementation is provided by `AndroidDeviceIdentityKeyStore` in `androidMain` and uses Android Keystore with a P-256 signing key. iOS implementation is provided by `IosDeviceIdentityKeyStore` in `iosMain` and requires Secure Enclave; it intentionally fails closed on simulators/devices where Secure Enclave key generation is unavailable. Neither implementation exports the private key. Backend challenge endpoints remain integration work.
 
 ## Handshake
 
@@ -49,4 +49,4 @@ Backend must match X25519, DER/SPKI public-key encoding, HKDF-SHA256 parameters 
 
 ServerHandshakeVerifier is an injected trust boundary. The app must implement it using a pinned backend signing public key (or a reviewed certificate/key-rotation scheme). This library intentionally does not accept arbitrary server keys or embed production signing keys.
 
-The common module exposes the persistent identity contract in DeviceIdentity.kt. Concrete Android Keystore and iOS Keychain/Secure Enclave adapters, plus backend registration/challenge endpoints, remain platform/backend integration work.
+The common module exposes the persistent identity contract in DeviceIdentity.kt. `PinnedEd25519HandshakeVerifier` verifies transcript signatures only against an application-provisioned allow-list of DER/SPKI Ed25519 public keys. Key rotation must be delivered through an authenticated application configuration/release channel. Backend registration/challenge endpoints and production key provisioning remain integration work.
