@@ -93,4 +93,44 @@ class X25519HandshakeTest {
             X25519Handshake().complete(pending, hello, ServerHandshakeVerifier { _, _, _ -> false })
         }
     }
+    @Test
+    fun unsupportedClientSuiteIsRejectedBeforeSignatureVerification() = runTest {
+        val pending = X25519Handshake().begin()
+        val altered = pending.clientHello.copy(encryption = "AES-128-GCM")
+        val mutatedPending = PendingClientHandshake(
+            altered,
+            CryptographyProvider.Default.get(XDH)
+                .keyPairGenerator(XDH.Curve.X25519).generateKey().privateKey
+        )
+        val hello = ServerHello(
+            sessionId = "test-session",
+            serverEphemeralPublicKey = byteArrayOf(1),
+            serverNonce = ByteArray(32),
+            signingKeyId = "test-key",
+            signature = byteArrayOf(1)
+        )
+        assertFailsWith<SecurityError.InvalidHandshake> {
+            X25519Handshake().complete(mutatedPending, hello, ServerHandshakeVerifier { _, _, _ ->
+                error("Verifier must not be called for unsupported suite")
+            })
+        }
+    }
+
+    @Test
+    fun malformedServerPublicKeyAndNonceAreRejected() = runTest {
+        val pending = X25519Handshake().begin()
+        val hello = ServerHello(
+            sessionId = "test-session",
+            serverEphemeralPublicKey = ByteArray(257),
+            serverNonce = ByteArray(31),
+            signingKeyId = "test-key",
+            signature = byteArrayOf(1)
+        )
+        assertFailsWith<SecurityError.InvalidHandshake> {
+            X25519Handshake().complete(pending, hello, ServerHandshakeVerifier { _, _, _ ->
+                error("Verifier must not be called for malformed server hello")
+            })
+        }
+    }
+
 }
