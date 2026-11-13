@@ -19,7 +19,8 @@ Security foundation with AES-256-GCM and an authenticated ephemeral X25519 + HKD
 - Optional Additional Authenticated Data (AAD)
 - ByteArray and kotlinx.serialization JSON helpers
 - Explicit key-material interface; no embedded application secrets
-- Persistent installation identity contract via a platform-backed keystore adapter (ECDSA P-256 signing; private key never exported)\n- Authenticated ephemeral X25519 handshake with injected server identity verification
+- Persistent installation identity contract with Android Keystore and iOS Secure Enclave adapters (ECDSA P-256 signing; private key never exported)
+- Authenticated ephemeral X25519 handshake with injected server identity verification
 - Separate client-to-server and server-to-client AES-256 keys derived with HKDF-SHA256
 - Session-bound AAD and strict response sequence/replay checks
 - Documented backend interoperability contract in SECURITY_PROTOCOL.md
@@ -28,7 +29,7 @@ Security foundation with AES-256-GCM and an authenticated ephemeral X25519 + HKD
 
 AES keys must contain exactly 32 bytes. Never hardcode a production key in the app, source control, build config, or remote config. Mobile application binaries can be inspected. Provision keys through an authenticated backend/key-management design and protect device-held key material with platform facilities.
 
-The `DeviceIdentityKeyStore` is an integration contract, not a built-in platform implementation. The host app must supply Android Keystore and iOS Keychain/Secure Enclave adapters; the library intentionally has no software-key fallback. The adapter must persist a P-256 signing key, expose only its DER public key, and sign one-time backend challenges. The `RawAesKey` adapter remains for session AES key material and is **not** a replacement for platform key storage.
+The `DeviceIdentityKeyStore` contract has platform implementations: Android Keystore in `androidMain` and Secure Enclave-backed P-256 signing in `iosMain`. The iOS adapter intentionally fails closed when Secure Enclave is unavailable; it does not silently create a software key. Both adapters expose only the public key and sign one-time backend challenges. Android hardware backing varies by device and must be checked when policy requires TEE/StrongBox guarantees. `RawAesKey` is for in-memory session AES key material and is **not** a replacement for platform key storage.
 
 Each encryption operation uses the provider's random-IV API. Do not add a custom fixed nonce or reuse an IV with the same key. AES-GCM authentication failures (wrong key, altered ciphertext, or mismatched AAD) must be treated as decryption failures.
 
@@ -36,7 +37,7 @@ Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, 
 
 ## Gradle
 
-Add the module to your CMP build and depend on `project(":security")`. The library currently configures Android, JVM, iOS device and iOS simulator targets.
+Add the module to your CMP build and depend on `project(":security")`. The library currently configures Android, JVM desktop, iOS device and iOS simulator targets. Desktop JVM builds are validated on Linux, macOS and Windows in CI.
 
 ## Basic usage
 
