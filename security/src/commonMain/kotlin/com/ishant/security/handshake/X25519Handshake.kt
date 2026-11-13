@@ -38,7 +38,7 @@ class X25519Handshake {
             clientHello.keyDerivation != "HKDF-SHA256" ||
             clientHello.encryption != "AES-256-GCM" ||
             clientHello.clientNonce.size != NONCE_SIZE ||
-            clientHello.clientEphemeralPublicKey.size !in 1..MAX_PUBLIC_KEY_BYTES
+            !isX25519SubjectPublicKeyInfo(clientHello.clientEphemeralPublicKey)
         ) throw SecurityError.InvalidHandshake("Unsupported or malformed client hello")
 
         if (serverHello.protocolVersion != ClientHello.CURRENT_VERSION) {
