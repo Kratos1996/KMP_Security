@@ -9,6 +9,7 @@ import dev.whyoleg.cryptography.algorithms.SHA256
 import dev.whyoleg.cryptography.algorithms.XDH
 import dev.whyoleg.cryptography.BinarySize.Companion.bits
 import dev.whyoleg.cryptography.random.CryptographyRandom
+import kotlin.coroutines.cancellation.CancellationException
 
 /** Client-side ephemeral X25519 handshake. Private key bytes are never exported. */
 class X25519Handshake {
@@ -36,6 +37,7 @@ class X25519Handshake {
             throw SecurityError.InvalidHandshake("Invalid session id")
         }
         if (serverHello.serverNonce.size != NONCE_SIZE || serverHello.signature.isEmpty() ||
+            serverHello.signatureAlgorithm != "Ed25519" ||
             serverHello.signingKeyId.isBlank() || serverHello.serverEphemeralPublicKey.isEmpty()
         ) throw SecurityError.InvalidHandshake("Incomplete server hello")
 
@@ -75,6 +77,8 @@ class X25519Handshake {
             }
         } catch (error: SecurityError) {
             throw error
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (cause: Throwable) {
             throw SecurityError.KeyAgreementFailed(cause)
         }
