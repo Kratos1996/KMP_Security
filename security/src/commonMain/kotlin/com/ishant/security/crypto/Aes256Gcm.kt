@@ -5,6 +5,7 @@ import com.ishant.security.core.SecurityError
 import com.ishant.security.keys.RawAesKey
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.algorithms.AES
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * AES-256-GCM operations.
@@ -30,6 +31,8 @@ class Aes256Gcm {
                 associatedData = associatedData
             )
             EncryptedPayload(ciphertext = encrypted)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (cause: Throwable) {
             throw SecurityError.EncryptionFailed(cause)
         }
@@ -58,6 +61,8 @@ class Aes256Gcm {
                 ciphertext = payload.ciphertext,
                 associatedData = associatedData
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (cause: Throwable) {
             throw SecurityError.DecryptionFailed(cause)
         }
