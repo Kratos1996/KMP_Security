@@ -40,7 +40,7 @@ class X25519HandshakeTest {
             verifiedTranscript = transcript
             true
         })
-        assertTrue(!verifiedTranscript.isNullOrEmpty())
+        assertTrue(verifiedTranscript?.isNotEmpty() == true)
 
         val clientPublic = xdh.publicKeyDecoder(XDH.Curve.X25519)
             .decodeFromByteArray(XDH.PublicKey.Format.DER, pending.clientHello.clientEphemeralPublicKey)
@@ -48,7 +48,7 @@ class X25519HandshakeTest {
             .generateSharedSecretToByteArray(clientPublic)
         val salt = pending.clientHello.clientNonce + serverNonce
         val hkdf = provider.get(HKDF)
-        fun serverKey(label: String): ByteArray = hkdf.secretDerivation(
+        suspend fun serverKey(label: String): ByteArray = hkdf.secretDerivation(
             digest = SHA256,
             outputSize = 256.bits,
             salt = salt,
