@@ -11,5 +11,7 @@ package com.ishant.security.keys
 class RawAesKey(bytes: ByteArray) {
     internal val bytes: ByteArray = bytes.copyOf()
 
+    internal fun clear() { bytes.fill(0) }
+
     override fun toString(): String = "RawAesKey([REDACTED])"
 }
