@@ -9,7 +9,7 @@ A Kotlin Multiplatform security foundation for Compose Multiplatform application
 
 ## Status
 
-Initial library foundation. The API and source layout are committed; run the Gradle checks on the target toolchain before publishing or using it with production data.
+Security foundation with AES-256-GCM and an authenticated ephemeral X25519 + HKDF-SHA256 client handshake. This repository is not yet production-certified; run the Gradle checks and backend interoperability tests before handling production data.
 
 ## Features
 
@@ -19,6 +19,10 @@ Initial library foundation. The API and source layout are committed; run the Gra
 - Optional Additional Authenticated Data (AAD)
 - ByteArray and kotlinx.serialization JSON helpers
 - Explicit key-material interface; no embedded application secrets
+- Authenticated ephemeral X25519 handshake with injected server identity verification
+- Separate client-to-server and server-to-client AES-256 keys derived with HKDF-SHA256
+- Session-bound AAD and strict response sequence/replay checks
+- Documented backend interoperability contract in SECURITY_PROTOCOL.md
 
 ## Security model
 
@@ -28,7 +32,7 @@ The current `RawAesKey` adapter is for key material supplied by a trusted key-ma
 
 Each encryption operation uses the provider's random-IV API. Do not add a custom fixed nonce or reuse an IV with the same key. AES-GCM authentication failures (wrong key, altered ciphertext, or mismatched AAD) must be treated as decryption failures.
 
-Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, authentication, authorization, or replay protection.
+Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, authentication, authorization, or backend-side replay protection. See SECURITY_PROTOCOL.md for the handshake contract.
 
 ## Gradle
 
@@ -71,4 +75,4 @@ Keep the envelope version and algorithm fields when persisting or transmitting c
 ./gradlew :security:compileKotlinJvm
 ```
 
-See [SECURITY.md](SECURITY.md) for the security checklist and [CHANGELOG.md](CHANGELOG.md) for release notes.
+See [SECURITY.md](SECURITY.md), [SECURITY_PROTOCOL.md](SECURITY_PROTOCOL.md), and [CHANGELOG.md](CHANGELOG.md).
