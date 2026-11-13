@@ -32,7 +32,7 @@ Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, 
 
 ## Gradle
 
-Add the module to your CMP build and depend on `project(":security")`. The library currently exposes a Kotlin Multiplatform module with common code and a JVM target; Android and Apple targets can be enabled as required by the host build.
+Add the module to your CMP build and depend on `project(":security")`. The library currently configures Android, JVM, iOS device and iOS simulator targets.
 
 ## Basic usage
 
