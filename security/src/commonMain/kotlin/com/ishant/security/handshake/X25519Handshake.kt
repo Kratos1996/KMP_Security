@@ -30,6 +30,17 @@ class X25519Handshake {
         serverHello: ServerHello,
         verifier: ServerHandshakeVerifier
     ): SecuritySession {
+        // Validate both sides before consuming the one-time ephemeral private key.
+        // The transcript binds these values, but unsupported suites must never be accepted.
+        val clientHello = pending.clientHello
+        if (clientHello.protocolVersion != ClientHello.CURRENT_VERSION ||
+            clientHello.keyAgreement != "X25519" ||
+            clientHello.keyDerivation != "HKDF-SHA256" ||
+            clientHello.encryption != "AES-256-GCM" ||
+            clientHello.clientNonce.size != NONCE_SIZE ||
+            clientHello.clientEphemeralPublicKey.size !in 1..MAX_PUBLIC_KEY_BYTES
+        ) throw SecurityError.InvalidHandshake("Unsupported or malformed client hello")
+
         if (serverHello.protocolVersion != ClientHello.CURRENT_VERSION) {
             throw SecurityError.InvalidHandshake("Unsupported protocol version")
         }
@@ -38,7 +49,8 @@ class X25519Handshake {
         }
         if (serverHello.serverNonce.size != NONCE_SIZE || serverHello.signature.isEmpty() ||
             serverHello.signatureAlgorithm != "Ed25519" ||
-            serverHello.signingKeyId.isBlank() || serverHello.serverEphemeralPublicKey.isEmpty()
+            serverHello.signingKeyId.isBlank() || serverHello.signingKeyId.length > 128 ||
+            serverHello.serverEphemeralPublicKey.size !in 1..MAX_PUBLIC_KEY_BYTES
         ) throw SecurityError.InvalidHandshake("Incomplete server hello")
 
         val privateKey = pending.consumePrivateKey()
@@ -84,7 +96,10 @@ class X25519Handshake {
         }
     }
 
-    private companion object { const val NONCE_SIZE = 32 }
+    private companion object {
+        const val NONCE_SIZE = 32
+        const val MAX_PUBLIC_KEY_BYTES = 256
+    }
 }
 
 class PendingClientHandshake internal constructor(
