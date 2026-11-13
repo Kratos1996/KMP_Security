@@ -24,7 +24,7 @@ kotlin {
         commonMain.dependencies {
             implementation("dev.whyoleg.cryptography:cryptography-core:0.6.0")
             implementation("dev.whyoleg.cryptography:cryptography-provider-optimal:0.6.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
         }
 
         commonTest.dependencies {
