@@ -4,11 +4,16 @@ import com.ishant.security.core.EncryptedPayload
 import com.ishant.security.core.SecurityError
 import com.ishant.security.crypto.Aes256Gcm
 import com.ishant.security.keys.RawAesKey
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 
 /**
  * Direction-separated keys, session-bound AAD and strict in-order response checks.
- * Serialize calls to an instance: this class is intentionally not thread-safe.
+ *
+ * Request and response operations are serialized independently. This guarantees
+ * unique, ordered sequence assignment for concurrent callers in each direction.
+ * Do not call [close] concurrently with an in-flight operation.
  */
 class SecuritySession internal constructor(
     val sessionId: String,
@@ -16,29 +21,39 @@ class SecuritySession internal constructor(
     internal val responseKey: RawAesKey,
     private val aes: Aes256Gcm = Aes256Gcm()
 ) {
+    private val requestMutex = Mutex()
+    private val responseMutex = Mutex()
+
     private var nextRequestSequence = 0L
     private var nextResponseSequence = 0L
     private var closed = false
 
-    suspend fun encryptRequest(plaintext: ByteArray): SequencedCiphertext {
-        ensureOpen()
-        if (nextRequestSequence == Long.MAX_VALUE) throw SecurityError.SequenceExhausted
-        val sequence = nextRequestSequence
-        val payload = aes.encrypt(plaintext, requestKey, aad("c2s", sequence))
-        nextRequestSequence++
-        return SequencedCiphertext(sequence, payload)
-    }
+    suspend fun encryptRequest(plaintext: ByteArray): SequencedCiphertext =
+        requestMutex.withLock {
+            ensureOpen()
+            if (nextRequestSequence == Long.MAX_VALUE) throw SecurityError.SequenceExhausted
 
-    suspend fun decryptResponse(message: SequencedCiphertext): ByteArray {
-        ensureOpen()
-        if (message.sequence != nextResponseSequence) {
-            throw SecurityError.ReplayOrOutOfOrderMessage(nextResponseSequence, message.sequence)
+            // Consume the sequence before invoking the provider. A failed/cancelled
+            // encryption must never make the same protocol sequence reusable.
+            val sequence = nextRequestSequence++
+            val payload = aes.encrypt(plaintext, requestKey, aad("c2s", sequence))
+            SequencedCiphertext(sequence, payload)
         }
-        if (nextResponseSequence == Long.MAX_VALUE) throw SecurityError.SequenceExhausted
-        val plaintext = aes.decrypt(message.payload, responseKey, aad("s2c", message.sequence))
-        nextResponseSequence++
-        return plaintext
-    }
+
+    suspend fun decryptResponse(message: SequencedCiphertext): ByteArray =
+        responseMutex.withLock {
+            ensureOpen()
+            if (message.sequence != nextResponseSequence) {
+                throw SecurityError.ReplayOrOutOfOrderMessage(nextResponseSequence, message.sequence)
+            }
+            if (nextResponseSequence == Long.MAX_VALUE) throw SecurityError.SequenceExhausted
+
+            // Advance only after authentication succeeds, allowing a valid retry
+            // after malformed/tampered input while still rejecting concurrent replay.
+            val plaintext = aes.decrypt(message.payload, responseKey, aad("s2c", message.sequence))
+            nextResponseSequence++
+            plaintext
+        }
 
     fun close() {
         if (!closed) {
