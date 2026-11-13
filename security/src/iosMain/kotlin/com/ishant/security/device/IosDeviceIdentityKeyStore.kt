@@ -110,9 +110,9 @@ class IosDeviceIdentityKeyStore(
                 )
             ) { "Secure Enclave key does not support ECDSA P-256 signing" }
 
-            withChallengeData(challenge) { data, error ->
-                val signature = SecKeyCreateSignature(privateKey, SIGNATURE_ALGORITHM, data, error)
-                    ?: error("Secure Enclave signing failed: ${error.value?.let { CFErrorGetCode(it) }}")
+            withChallengeData(challenge) { data, errorRef ->
+                val signature = SecKeyCreateSignature(privateKey, SIGNATURE_ALGORITHM, data, errorRef)
+                    ?: error("Secure Enclave signing failed: ${errorRef.pointed?.value?.let { CFErrorGetCode(it) }}")
                 try {
                     signature.toByteArray()
                 } finally {
@@ -162,7 +162,7 @@ class IosDeviceIdentityKeyStore(
     }
 
     private fun createSecureEnclaveKey(): SecKeyRef = memScoped {
-        val error = alloc<CFErrorRefVar>()
+        val errorRef = alloc<CFErrorRefVar>()
         val tag = applicationTag.encodeToByteArray().toCFData()
             ?: error("Unable to encode Keychain application tag")
         val privateAttributes = newDictionary()
@@ -173,8 +173,8 @@ class IosDeviceIdentityKeyStore(
             kCFAllocatorDefault,
             kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecAccessControlPrivateKeyUsage,
-            error.ptr
-        ) ?: error("Secure Enclave access control unavailable: ${error.value?.let { CFErrorGetCode(it) }}")
+            errorRef.ptr
+        ) ?: error("Secure Enclave access control unavailable: ${errorRef.value?.let { CFErrorGetCode(it) }}")
 
         CFDictionarySetValue(privateAttributes, kSecAttrAccessControl, accessControl)
         val attributes = newDictionary()
@@ -191,8 +191,8 @@ class IosDeviceIdentityKeyStore(
         CFDictionarySetValue(attributes, kSecPrivateKeyAttrs, privateAttributes)
 
         try {
-            SecKeyCreateRandomKey(attributes, error.ptr)
-                ?: error("Secure Enclave key generation failed: ${error.value?.let { CFErrorGetCode(it) }}")
+            SecKeyCreateRandomKey(attributes, errorRef.ptr)
+                ?: error("Secure Enclave key generation failed: ${errorRef.value?.let { CFErrorGetCode(it) }}")
         } finally {
             CFRelease(attributes)
             CFRelease(privateAttributes)
@@ -214,12 +214,12 @@ class IosDeviceIdentityKeyStore(
         }
     }
 
-    private fun exportKey(key: SecKeyRef): ByteArray {
-        val error = memScoped { alloc<CFErrorRefVar>() }
-        val data = SecKeyCopyExternalRepresentation(key, error.ptr)
-            ?: error("Secure Enclave public key export failed: ${error.value?.let { CFErrorGetCode(it) }}")
+    private fun exportKey(key: SecKeyRef): ByteArray = memScoped {
+        val errorRef = alloc<CFErrorRefVar>()
+        val data = SecKeyCopyExternalRepresentation(key, errorRef.ptr)
+            ?: error("Secure Enclave public key export failed: ${errorRef.value?.let { CFErrorGetCode(it) }}")
         try {
-            return data.toByteArray()
+            data.toByteArray()
         } finally {
             CFRelease(data)
         }
