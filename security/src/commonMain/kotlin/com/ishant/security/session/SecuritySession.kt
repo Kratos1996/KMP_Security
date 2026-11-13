@@ -40,7 +40,13 @@ class SecuritySession internal constructor(
         return plaintext
     }
 
-    fun close() { closed = true }
+    fun close() {
+        if (!closed) {
+            closed = true
+            requestKey.clear()
+            responseKey.clear()
+        }
+    }
 
     private fun ensureOpen() {
         if (closed) throw SecurityError.SessionClosed
