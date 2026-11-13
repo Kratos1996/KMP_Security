@@ -9,6 +9,16 @@ This repository contains client-side cryptographic primitives only. It performs 
 - Authenticate the backend signing identity using a preconfigured/pinned public key or a reviewed certificate/key-rotation scheme.
 - Never trust a signing key supplied only by the unauthenticated ServerHello.
 
+## Persistent device identity
+
+- The app creates one installation identity key through the `DeviceIdentityKeyStore` adapter.
+- The key is ECDSA P-256 with SHA-256 signatures; public key encoding is DER SubjectPublicKeyInfo.
+- The private key must be generated and retained by Android Keystore or an appropriate iOS Keychain/Secure Enclave-backed implementation. It must never be exported to common Kotlin code or sent to the backend.
+- Register the public key and key ID with the backend. For proof of possession, the backend issues a fresh, unpredictable, single-use challenge over TLS; the app signs the exact challenge and returns the signature.
+- Backend verifies the challenge signature against the registered public key, enforces expiry/single use, and binds the identity to the authenticated account/device record.
+- Logout does not automatically delete the installation identity. Delete it only during explicit device de-registration, app reset, or a reviewed key-rotation flow.
+- The common module contains the adapter contract only. Platform implementations and backend challenge endpoints remain integration work; never substitute an in-memory/software private key in production.
+
 ## Handshake
 
 1. Client generates a fresh ephemeral X25519 key pair and 32-byte random client nonce.
@@ -39,4 +49,4 @@ Backend must match X25519, DER/SPKI public-key encoding, HKDF-SHA256 parameters 
 
 ServerHandshakeVerifier is an injected trust boundary. The app must implement it using a pinned backend signing public key (or a reviewed certificate/key-rotation scheme). This library intentionally does not accept arbitrary server keys or embed production signing keys.
 
-Android Keystore and iOS Keychain adapters for persistent device identity keys are not included in this ephemeral session API. They are separate platform-specific work.
+The common module exposes the persistent identity contract in DeviceIdentity.kt. Concrete Android Keystore and iOS Keychain/Secure Enclave adapters, plus backend registration/challenge endpoints, remain platform/backend integration work.
