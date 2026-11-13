@@ -17,7 +17,7 @@ This repository contains client-side cryptographic primitives only. It performs 
 - Register the public key and key ID with the backend. For proof of possession, the backend issues a fresh, unpredictable, single-use challenge over TLS; the app signs the exact challenge and returns the signature.
 - Backend verifies the challenge signature against the registered public key, enforces expiry/single use, and binds the identity to the authenticated account/device record.
 - Logout does not automatically delete the installation identity. Delete it only during explicit device de-registration, app reset, or a reviewed key-rotation flow.
-- The common module contains the adapter contract only. Platform implementations and backend challenge endpoints remain integration work; never substitute an in-memory/software private key in production.
+- Android implementation is provided by `AndroidDeviceIdentityKeyStore` in `androidMain` and uses Android Keystore with a P-256 signing key. The iOS adapter is not implemented yet; do not use an in-memory/software private key as a production substitute. Backend challenge endpoints remain integration work.
 
 ## Handshake
 
