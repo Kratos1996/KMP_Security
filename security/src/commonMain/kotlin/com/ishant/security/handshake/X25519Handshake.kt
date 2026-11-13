@@ -50,25 +50,29 @@ class X25519Handshake {
                 .decodeFromByteArray(XDH.PublicKey.Format.DER, serverHello.serverEphemeralPublicKey)
             val sharedSecret = privateKey.sharedSecretGenerator()
                 .generateSharedSecretToByteArray(serverPublic)
-            val salt = pending.clientHello.clientNonce + serverHello.serverNonce
-            val hkdf = provider.get(HKDF)
+            try {
+                val salt = pending.clientHello.clientNonce + serverHello.serverNonce
+                val hkdf = provider.get(HKDF)
 
-            fun derive(direction: String): RawAesKey {
-                val info = ("yralfood-security/v1/${serverHello.sessionId}/$direction").encodeToByteArray()
-                val keyBytes = hkdf.secretDerivation(
-                    digest = SHA256,
-                    outputSize = 256.bits,
-                    salt = salt,
-                    info = info
-                ).deriveSecretToByteArray(sharedSecret)
-                return RawAesKey(keyBytes)
+                fun derive(direction: String): RawAesKey {
+                    val info = ("yralfood-security/v1/${serverHello.sessionId}/$direction").encodeToByteArray()
+                    val keyBytes = hkdf.secretDerivation(
+                        digest = SHA256,
+                        outputSize = 256.bits,
+                        salt = salt,
+                        info = info
+                    ).deriveSecretToByteArray(sharedSecret)
+                    return try { RawAesKey(keyBytes) } finally { keyBytes.fill(0) }
+                }
+
+                SecuritySession(
+                    sessionId = serverHello.sessionId,
+                    requestKey = derive("client-to-server"),
+                    responseKey = derive("server-to-client")
+                )
+            } finally {
+                sharedSecret.fill(0)
             }
-
-            SecuritySession(
-                sessionId = serverHello.sessionId,
-                requestKey = derive("client-to-server"),
-                responseKey = derive("server-to-client")
-            )
         } catch (error: SecurityError) {
             throw error
         } catch (cause: Throwable) {
