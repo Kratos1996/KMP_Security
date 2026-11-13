@@ -64,6 +64,19 @@ class SecuritySessionConcurrencyTest {
         }
     }
 
+
+    @Test
+    fun closeZeroesBothKeysAndRejectsSubsequentCalls() = runTest {
+        val session = newSession()
+        session.close()
+
+        assertEquals(0, session.requestKey.bytes.count { it != 0.toByte() })
+        assertEquals(0, session.responseKey.bytes.count { it != 0.toByte() })
+        assertFailsWith<com.ishant.security.core.SecurityError.SessionClosed> {
+            session.encryptRequest(byteArrayOf(7))
+        }
+    }
+
     private fun newSession() = SecuritySession(
         sessionId = "test-session",
         requestKey = RawAesKey(ByteArray(32) { 1 }),
