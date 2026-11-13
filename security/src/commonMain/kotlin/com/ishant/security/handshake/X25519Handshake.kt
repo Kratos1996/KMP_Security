@@ -50,7 +50,7 @@ class X25519Handshake {
         if (serverHello.serverNonce.size != NONCE_SIZE || serverHello.signature.isEmpty() ||
             serverHello.signatureAlgorithm != "Ed25519" ||
             serverHello.signingKeyId.isBlank() || serverHello.signingKeyId.length > 128 ||
-            serverHello.serverEphemeralPublicKey.size !in 1..MAX_PUBLIC_KEY_BYTES
+            !isX25519SubjectPublicKeyInfo(serverHello.serverEphemeralPublicKey)
         ) throw SecurityError.InvalidHandshake("Incomplete server hello")
 
         val privateKey = pending.consumePrivateKey()
@@ -96,9 +96,17 @@ class X25519Handshake {
         }
     }
 
+    private fun isX25519SubjectPublicKeyInfo(encoded: ByteArray): Boolean =
+        encoded.size == X25519_SPKI_PREFIX.size + X25519_PUBLIC_KEY_SIZE &&
+            encoded.copyOfRange(0, X25519_SPKI_PREFIX.size).contentEquals(X25519_SPKI_PREFIX)
+
     private companion object {
         const val NONCE_SIZE = 32
-        const val MAX_PUBLIC_KEY_BYTES = 256
+        const val X25519_PUBLIC_KEY_SIZE = 32
+        val X25519_SPKI_PREFIX = byteArrayOf(
+            0x30, 0x2A, 0x30, 0x05, 0x06, 0x03,
+            0x2B, 0x65, 0x6E, 0x03, 0x21, 0x00
+        )
     }
 }
 
