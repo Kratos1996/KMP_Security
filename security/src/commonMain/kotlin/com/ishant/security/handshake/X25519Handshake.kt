@@ -56,7 +56,7 @@ class X25519Handshake {
                 val salt = pending.clientHello.clientNonce + serverHello.serverNonce
                 val hkdf = provider.get(HKDF)
 
-                fun derive(direction: String): RawAesKey {
+                suspend fun derive(direction: String): RawAesKey {
                     val info = ("yralfood-security/v1/${serverHello.sessionId}/$direction").encodeToByteArray()
                     val keyBytes = hkdf.secretDerivation(
                         digest = SHA256,
