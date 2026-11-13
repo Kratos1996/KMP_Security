@@ -41,10 +41,12 @@ class PinnedEd25519HandshakeVerifier(
         val encodedKey = pinnedKeys[signingKeyId] ?: return false
         return try {
             val edDsa = provider.get(EdDSA)
-            val publicKey = edDsa.publicKeyDecoder(EdDSA.PublicKey.Format.DER)
+            val publicKey = edDsa.publicKeyDecoder(EdDSA.Curve.Ed25519)
                 .decodeFromByteArray(EdDSA.PublicKey.Format.DER, encodedKey)
             publicKey.signatureVerifier().tryVerifySignature(transcript, signature)
-        } catch (_: Throwable) {
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
             false
         }
     }
