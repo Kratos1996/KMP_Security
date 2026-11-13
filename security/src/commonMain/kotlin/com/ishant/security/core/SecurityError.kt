@@ -12,6 +12,14 @@ sealed class SecurityError(message: String, cause: Throwable? = null) :
     data class UnsupportedAlgorithm(val algorithm: String) :
         SecurityError("Unsupported encryption algorithm: $algorithm.")
 
+    class InvalidHandshake(message: String) : SecurityError(message)
+    data object HandshakeAuthenticationFailed : SecurityError("Server handshake signature verification failed.")
+    class KeyAgreementFailed(cause: Throwable) : SecurityError("X25519 key agreement or HKDF failed.", cause)
+    data object SessionClosed : SecurityError("Security session is closed.")
+    data object SequenceExhausted : SecurityError("Session sequence exhausted; establish a new session.")
+    class ReplayOrOutOfOrderMessage(expected: Long, actual: Long) :
+        SecurityError("Replay or out-of-order message: expected $expected, got $actual.")
+
     data object InvalidPayload :
         SecurityError("Encrypted payload is empty or malformed.")
 
