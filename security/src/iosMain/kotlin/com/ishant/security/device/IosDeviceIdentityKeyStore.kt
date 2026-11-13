@@ -246,9 +246,19 @@ class IosDeviceIdentityKeyStore(
         }
     }
 
-    private fun ByteArray.fingerprintKeyId(): String =
-        "p256-" + copyOfRange(SPKI_P256_PREFIX.size + 1, SPKI_P256_PREFIX.size + 21)
-            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+    private fun ByteArray.fingerprintKeyId(): String {
+        val digits = "0123456789abcdef"
+        val pointPrefix = SPKI_P256_PREFIX.size + 1
+        val bytes = copyOfRange(pointPrefix, pointPrefix + 20)
+        return buildString(45) {
+            append("p256-")
+            bytes.forEach { byte ->
+                val value = byte.toInt() and 0xff
+                append(digits[value ushr 4])
+                append(digits[value and 0x0f])
+            }
+        }
+    }
 
     private companion object {
         const val DEFAULT_APPLICATION_TAG = "com.ishant.security.device.identity.p256.v1"
@@ -258,9 +268,9 @@ class IosDeviceIdentityKeyStore(
         const val MAX_CHALLENGE_SIZE = 4096
         val SIGNATURE_ALGORITHM = kSecKeyAlgorithmECDSASignatureMessageX962SHA256
         val SPKI_P256_PREFIX = byteArrayOf(
-            0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D,
-            0x02, 0x01, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01,
-            0x07, 0x03, 0x42, 0x00
+            0x30.toByte(), 0x59.toByte(), 0x30.toByte(), 0x13.toByte(), 0x06.toByte(), 0x07.toByte(), 0x2A.toByte(), 0x86.toByte(), 0x48.toByte(), 0xCE.toByte(), 0x3D.toByte(),
+            0x02.toByte(), 0x01.toByte(), 0x06.toByte(), 0x08.toByte(), 0x2A.toByte(), 0x86.toByte(), 0x48.toByte(), 0xCE.toByte(), 0x3D.toByte(), 0x03.toByte(), 0x01.toByte(),
+            0x07.toByte(), 0x03.toByte(), 0x42.toByte(), 0x00.toByte()
         )
     }
 }
