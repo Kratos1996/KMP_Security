@@ -22,6 +22,7 @@ data class ServerHello(
     val serverEphemeralPublicKey: ByteArray,
     val serverNonce: ByteArray,
     val signingKeyId: String,
+    val signatureAlgorithm: String = "Ed25519",
     val signature: ByteArray
 )
 
