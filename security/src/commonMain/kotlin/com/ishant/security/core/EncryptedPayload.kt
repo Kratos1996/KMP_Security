@@ -14,9 +14,9 @@ data class EncryptedPayload(
     val ciphertext: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean =
-        other is EncryptedPayload &&
-            version == other.version &&
-            algorithm == other.algorithm &&
+        (other is EncryptedPayload) &&
+            (version == other.version) &&
+            (algorithm == other.algorithm) &&
             ciphertext.contentEquals(other.ciphertext)
 
     override fun hashCode(): Int =

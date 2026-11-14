@@ -16,7 +16,7 @@ internal object HandshakeTranscript {
             server.serverEphemeralPublicKey,
             server.serverNonce,
             server.signingKeyId.encodeToByteArray(),
-            server.signatureAlgorithm.encodeToByteArray()
+            server.signatureAlgorithm.encodeToByteArray(),
         )
         val out = ArrayList<Byte>()
         fields.forEach { field ->

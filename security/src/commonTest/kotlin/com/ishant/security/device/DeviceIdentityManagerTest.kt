@@ -5,7 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import kotlin.test.assertNull
 
 class DeviceIdentityManagerTest {
 
@@ -34,7 +34,7 @@ class DeviceIdentityManagerTest {
         assertFailsWith<IllegalArgumentException> {
             manager.signChallenge(ByteArray(4097))
         }
-        assertTrue(store.lastSignedChallenge == null)
+        assertNull(store.lastSignedChallenge)
     }
 
     @Test

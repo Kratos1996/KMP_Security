@@ -12,14 +12,14 @@ import dev.whyoleg.cryptography.algorithms.EdDSA
  */
 class PinnedEd25519HandshakeVerifier(
     trustedPublicKeys: Map<String, ByteArray>,
-    private val provider: CryptographyProvider = CryptographyProvider.Default
+    private val provider: CryptographyProvider = CryptographyProvider.Default,
 ) : ServerHandshakeVerifier {
 
     private val pinnedKeys: Map<String, ByteArray> = trustedPublicKeys.mapValues { (keyId, encoded) ->
-        require(keyId.isNotBlank() && keyId.length <= MAX_KEY_ID_LENGTH) {
+        require((keyId.isNotBlank()) && (keyId.length <= MAX_KEY_ID_LENGTH)) {
             "Invalid pinned signing key id"
         }
-        require(encoded.isNotEmpty() && encoded.size <= MAX_PUBLIC_KEY_DER_SIZE) {
+        require((encoded.isNotEmpty()) && (encoded.size <= MAX_PUBLIC_KEY_DER_SIZE)) {
             "Invalid Ed25519 public key encoding"
         }
         encoded.copyOf()

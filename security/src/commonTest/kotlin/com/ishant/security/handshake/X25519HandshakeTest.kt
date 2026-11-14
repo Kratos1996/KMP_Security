@@ -31,16 +31,16 @@ class X25519HandshakeTest {
             serverEphemeralPublicKey = serverPair.publicKey.encodeToByteArray(XDH.PublicKey.Format.DER),
             serverNonce = serverNonce,
             signingKeyId = "test-key",
-            signature = byteArrayOf(1, 2, 3)
+            signature = byteArrayOf(1, 2, 3),
         )
         var verifiedTranscript: ByteArray? = null
-        val session = handshake.complete(pending, serverHello, ServerHandshakeVerifier { keyId, transcript, signature ->
+        val session = handshake.complete(pending, serverHello) { keyId, transcript, signature ->
             assertEquals("test-key", keyId)
             assertContentEquals(byteArrayOf(1, 2, 3), signature)
             verifiedTranscript = transcript
             true
-        })
-        assertTrue(verifiedTranscript?.isNotEmpty() == true)
+        }
+        assertTrue(verifiedTranscript?.isNotEmpty() ?: false)
 
         val clientPublic = xdh.publicKeyDecoder(XDH.Curve.X25519)
             .decodeFromByteArray(XDH.PublicKey.Format.DER, pending.clientHello.clientEphemeralPublicKey)

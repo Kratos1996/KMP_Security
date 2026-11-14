@@ -41,7 +41,6 @@ import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAccessControlPrivateKeyUsage
 import platform.Security.kSecAttrAccessControl
-import platform.Security.kSecAttrAccessible
 import platform.Security.kSecAttrAccessibleWhenUnlockedThisDeviceOnly
 import platform.Security.kSecAttrApplicationTag
 import platform.Security.kSecAttrIsPermanent
@@ -113,7 +112,7 @@ class IosDeviceIdentityKeyStore(
 
             withChallengeData(challenge) { data, errorRef ->
                 val signature = SecKeyCreateSignature(privateKey, SIGNATURE_ALGORITHM, data, errorRef)
-                    ?: error("Secure Enclave signing failed: ${errorRef.pointed?.value?.let { CFErrorGetCode(it) }}")
+                    ?: error("Secure Enclave signing failed: ${errorRef.pointed.value?.let { CFErrorGetCode(it) }}")
                 try {
                     signature.toByteArray()
                 } finally {
