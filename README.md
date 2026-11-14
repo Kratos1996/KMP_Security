@@ -1,5 +1,9 @@
 # KMP_Security
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.kratos1996/kmp-security)](https://central.sonatype.com/artifact/io.github.kratos1996/kmp-security)
+[![](https://jitpack.io/v/Kratos1996/KMP_Security.svg)](https://jitpack.io/#Kratos1996/KMP_Security)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 A Kotlin Multiplatform security foundation for Compose Multiplatform and native Android/iOS applications.
 
 **Package:** `com.ishant.security`  
