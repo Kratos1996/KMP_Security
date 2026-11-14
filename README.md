@@ -2,7 +2,10 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.kratos1996/kmp-security)](https://central.sonatype.com/artifact/io.github.kratos1996/kmp-security)
 [![](https://jitpack.io/v/Kratos1996/KMP_Security.svg)](https://jitpack.io/#Kratos1996/KMP_Security)
+[![Author](https://img.shields.io/badge/Author-Ishant_Sharma-blue.svg)](https://github.com/Kratos1996)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+![Mobile Security Architecture Banner](Ishant%20Sharma%20Mobile%20Security%20Handoff.png)
 
 A Kotlin Multiplatform security foundation for Compose Multiplatform and native Android/iOS applications.
 
@@ -157,3 +160,11 @@ Run unit tests across all common and platform targets:
 ```
 
 See [SECURITY.md](SECURITY.md), [SECURITY_PROTOCOL.md](SECURITY_PROTOCOL.md), and [CHANGELOG.md](CHANGELOG.md).
+
+---
+
+## Author & Maintainer
+
+Created and maintained by **Ishant Sharma** ([@Kratos1996](https://github.com/Kratos1996)).
+Email: `ishant.sharma1947@gmail.com`
+
