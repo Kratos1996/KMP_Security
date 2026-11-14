@@ -94,7 +94,9 @@ android {
 
 mavenPublishing {
     publishToMavenCentral()
-    signAllPublications()
+    if (project.hasProperty("signing.keyId") || project.hasProperty("signing.gnupg.key") || project.hasProperty("signing.secretKeyRingFile")) {
+        signAllPublications()
+    }
     coordinates("io.github.kratos1996", "kmp-security", "1.0.1")
 
     pom {
