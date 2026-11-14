@@ -1,5 +1,6 @@
 package com.ishant.security.handshake
 
+import com.ishant.security.SecurityBuildConfig
 import com.ishant.security.core.SecurityError
 import com.ishant.security.keys.RawAesKey
 import com.ishant.security.session.SecuritySession
@@ -33,15 +34,15 @@ class X25519Handshake {
         // Validate both sides before consuming the one-time ephemeral private key.
         // The transcript binds these values, but unsupported suites must never be accepted.
         val clientHello = pending.clientHello
-        if (clientHello.protocolVersion != ClientHello.CURRENT_VERSION ||
+        if (clientHello.protocolVersion != SecurityBuildConfig.CURRENT_VERSION ||
             clientHello.keyAgreement != "X25519" ||
             clientHello.keyDerivation != "HKDF-SHA256" ||
-            clientHello.encryption != "AES-256-GCM" ||
+            clientHello.encryption != SecurityBuildConfig.ALGORITHM ||
             clientHello.clientNonce.size != NONCE_SIZE ||
             !isX25519SubjectPublicKeyInfo(clientHello.clientEphemeralPublicKey)
         ) throw SecurityError.InvalidHandshake("Unsupported or malformed client hello")
 
-        if (serverHello.protocolVersion != ClientHello.CURRENT_VERSION) {
+        if (serverHello.protocolVersion != SecurityBuildConfig.CURRENT_VERSION) {
             throw SecurityError.InvalidHandshake("Unsupported protocol version")
         }
         if (serverHello.sessionId.isBlank() || serverHello.sessionId.length > 128) {

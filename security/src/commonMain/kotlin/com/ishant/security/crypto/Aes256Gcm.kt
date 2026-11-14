@@ -1,5 +1,6 @@
 package com.ishant.security.crypto
 
+import com.ishant.security.SecurityBuildConfig
 import com.ishant.security.core.EncryptedPayload
 import com.ishant.security.core.SecurityError
 import com.ishant.security.keys.RawAesKey
@@ -44,10 +45,10 @@ class Aes256Gcm {
         associatedData: ByteArray? = null
     ): ByteArray {
         validateKey(key)
-        if (payload.version != EncryptedPayload.CURRENT_VERSION) {
+        if (payload.version != SecurityBuildConfig.CURRENT_VERSION) {
             throw SecurityError.UnsupportedPayloadVersion(payload.version)
         }
-        if (payload.algorithm != EncryptedPayload.ALGORITHM) {
+        if (payload.algorithm != SecurityBuildConfig.ALGORITHM) {
             throw SecurityError.UnsupportedAlgorithm(payload.algorithm)
         }
         if (payload.ciphertext.isEmpty()) {

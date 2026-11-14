@@ -17,4 +17,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KMP_Security"
-include(":security", ":sample")
+include(":security", ":app")

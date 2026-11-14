@@ -1,5 +1,6 @@
 package com.ishant.security.core
 
+import com.ishant.security.SecurityBuildConfig
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,9 +9,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class EncryptedPayload(
-    val version: Int = CURRENT_VERSION,
-    val algorithm: String = ALGORITHM,
-    val ciphertext: ByteArray
+    val version: Int = SecurityBuildConfig.CURRENT_VERSION,
+    val algorithm: String = SecurityBuildConfig.ALGORITHM,
+    val ciphertext: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean =
         other is EncryptedPayload &&
@@ -20,9 +21,4 @@ data class EncryptedPayload(
 
     override fun hashCode(): Int =
         31 * (31 * version + algorithm.hashCode()) + ciphertext.contentHashCode()
-
-    companion object {
-        const val CURRENT_VERSION: Int = 1
-        const val ALGORITHM: String = "AES-256-GCM"
-    }
 }

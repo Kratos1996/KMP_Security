@@ -1,7 +1,44 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     id("com.android.library")
+}
+
+abstract class GenerateSecurityBuildConfigTask : DefaultTask() {
+    @get:Input
+    abstract val currentVersion: Property<Int>
+
+    @get:Input
+    abstract val cipherAlgorithm: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val file = outputDir.get().file("com/ishant/security/SecurityBuildConfig.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            package com.ishant.security
+
+            internal object SecurityBuildConfig {
+                const val CURRENT_VERSION: Int = ${currentVersion.get()}
+                const val ALGORITHM: String = "${cipherAlgorithm.get()}"
+            }
+            """.trimIndent(),
+        )
+    }
+}
+
+val generateSecurityBuildConfig = tasks.register("generateSecurityBuildConfig", GenerateSecurityBuildConfigTask::class.java) {
+    description = "Generates SecurityBuildConfig object containing build constants"
+    group = "build"
+    currentVersion.set(1)
+    cipherAlgorithm.set("AES-256-GCM")
+    outputDir.set(layout.buildDirectory.dir("generated/source/buildConfig/commonMain/kotlin"))
 }
 
 kotlin {
@@ -13,7 +50,7 @@ kotlin {
     iosSimulatorArm64()
     iosX64()
 
-    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+    targets.withType<KotlinNativeTarget>().configureEach {
         binaries.framework {
             baseName = "Security"
             isStatic = true
@@ -21,11 +58,14 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-            implementation("dev.whyoleg.cryptography:cryptography-core:0.6.0")
-            implementation("dev.whyoleg.cryptography:cryptography-provider-optimal:0.6.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+        commonMain {
+            kotlin.srcDir(generateSecurityBuildConfig)
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+                implementation("dev.whyoleg.cryptography:cryptography-core:0.6.0")
+                implementation("dev.whyoleg.cryptography:cryptography-provider-optimal:0.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+            }
         }
 
         commonTest.dependencies {

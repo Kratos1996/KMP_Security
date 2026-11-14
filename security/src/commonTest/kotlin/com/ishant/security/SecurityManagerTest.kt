@@ -1,6 +1,5 @@
 package com.ishant.security
 
-import com.ishant.security.core.EncryptedPayload
 import com.ishant.security.core.SecurityError
 import com.ishant.security.keys.RawAesKey
 import kotlinx.coroutines.test.runTest
@@ -23,8 +22,8 @@ class SecurityManagerTest {
     @Test
     fun encryptedPayloadUsesVersionedAlgorithm() = runTest {
         val encrypted = manager.encryptBytes(byteArrayOf(1, 2, 3), key)
-        assertEquals(EncryptedPayload.CURRENT_VERSION, encrypted.version)
-        assertEquals(EncryptedPayload.ALGORITHM, encrypted.algorithm)
+        assertEquals(SecurityBuildConfig.CURRENT_VERSION, encrypted.version)
+        assertEquals(SecurityBuildConfig.ALGORITHM, encrypted.algorithm)
     }
 
     @Test
