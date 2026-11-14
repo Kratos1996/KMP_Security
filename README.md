@@ -14,6 +14,40 @@ A Kotlin Multiplatform security foundation for Compose Multiplatform and native 
 
 Security foundation with AES-256-GCM encryption and an authenticated ephemeral X25519 + HKDF-SHA256 handshake protocol. This repository is structured as a Kotlin Multiplatform library with a companion Android sample application.
 
+## Installation
+
+### Option 1: Maven Central (Recommended)
+Add the dependency to your project's `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("io.github.kratos1996:kmp-security:1.0.2")
+}
+```
+
+### Option 2: JitPack
+
+1. Add the JitPack repository in your root `settings.gradle.kts`:
+
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+2. Add the dependency:
+
+```kotlin
+dependencies {
+    implementation("com.github.Kratos1996:KMP_Security:1.0.2")
+}
+```
+
 ## Project Architecture
 
 ```
