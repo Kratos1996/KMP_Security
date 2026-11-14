@@ -73,7 +73,7 @@ class SecuritySession internal constructor(
     }
 
     private fun aad(direction: String, sequence: Long): ByteArray =
-        "yralfood-security/v1|$sessionId|$direction|$sequence".encodeToByteArray()
+        "kmp-security/v1|$sessionId|$direction|$sequence".encodeToByteArray()
 }
 
 @Serializable

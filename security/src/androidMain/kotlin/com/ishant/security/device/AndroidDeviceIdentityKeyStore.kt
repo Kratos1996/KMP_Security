@@ -95,7 +95,7 @@ class AndroidDeviceIdentityKeyStore(
     }
 
     private companion object {
-        const val DEFAULT_ALIAS = "yralfood.device.identity.p256.v1"
+        const val DEFAULT_ALIAS = "kmp.security.device.identity.p256.v1"
         const val ANDROID_KEY_STORE = "AndroidKeyStore"
         const val EC_CURVE = "secp256r1"
         const val SIGNATURE = "SHA256withECDSA"

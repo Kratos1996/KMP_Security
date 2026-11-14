@@ -28,15 +28,15 @@ This repository contains client-side cryptographic primitives only. It performs 
 5. Client verifies the signature using its pre-trusted server signing key before accepting the server ephemeral key.
 6. Both sides compute X25519(client ephemeral private key, server ephemeral public key).
 7. Both derive independent 32-byte keys using HKDF-SHA256, salt = clientNonce || serverNonce, and info labels:
-   - yralfood-security/v1/{sessionId}/client-to-server
-   - yralfood-security/v1/{sessionId}/server-to-client
+   - kmp-security/v1/{sessionId}/client-to-server
+   - kmp-security/v1/{sessionId}/server-to-client
 8. Never transmit private keys or the raw shared secret. Discard ephemeral private/shared-secret material as soon as practical.
 
 ## Message protection
 
 - AES-256-GCM uses a fresh provider-generated nonce for every encryption.
 - Requests and responses use independent keys.
-- AAD is UTF-8: yralfood-security/v1|{sessionId}|{direction}|{sequence}
+- AAD is UTF-8: kmp-security/v1|{sessionId}|{direction}|{sequence}
 - Direction is c2s for client requests and s2c for server responses.
 - Sequence starts at zero and increases by exactly one per direction. Reject duplicates, gaps and out-of-order messages.
 - Re-handshake on expiry, logout, revocation, compromise, or sequence exhaustion.

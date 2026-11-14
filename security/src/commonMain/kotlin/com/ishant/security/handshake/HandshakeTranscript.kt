@@ -4,7 +4,7 @@ package com.ishant.security.handshake
 internal object HandshakeTranscript {
     fun encode(client: ClientHello, server: ServerHello): ByteArray {
         val fields = listOf(
-            "yralfood-security-handshake-v1".encodeToByteArray(),
+            "kmp-security-handshake-v1".encodeToByteArray(),
             client.protocolVersion.toString().encodeToByteArray(),
             client.keyAgreement.encodeToByteArray(),
             client.keyDerivation.encodeToByteArray(),

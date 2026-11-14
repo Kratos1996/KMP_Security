@@ -1,4 +1,4 @@
-# yralFood-security
+# KMP_Security
 
 A Kotlin Multiplatform security foundation for Compose Multiplatform applications.
 
@@ -23,7 +23,7 @@ Security foundation with AES-256-GCM and an authenticated ephemeral X25519 + HKD
 - Authenticated ephemeral X25519 handshake with injected server identity verification
 - Separate client-to-server and server-to-client AES-256 keys derived with HKDF-SHA256
 - Session-bound AAD and strict response sequence/replay checks
-- Documented backend interoperability contract in SECURITY_PROTOCOL.md
+- Documented backend interoperability contract in [SECURITY_PROTOCOL.md](SECURITY_PROTOCOL.md)
 
 ## Security model
 
@@ -33,7 +33,7 @@ The `DeviceIdentityKeyStore` contract has platform implementations: Android Keys
 
 Each encryption operation uses the provider's random-IV API. Do not add a custom fixed nonce or reuse an IV with the same key. AES-GCM authentication failures (wrong key, altered ciphertext, or mismatched AAD) must be treated as decryption failures.
 
-Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, authentication, authorization, or backend-side replay protection. See SECURITY_PROTOCOL.md for the handshake contract.
+Use HTTPS/TLS for transport. Application-layer encryption does not replace TLS, authentication, authorization, or backend-side replay protection. See [SECURITY_PROTOCOL.md](SECURITY_PROTOCOL.md) for the handshake contract.
 
 ## Gradle
 
@@ -42,6 +42,7 @@ Add the module to your CMP build and depend on `project(":security")`. The libra
 ## Basic usage
 
 ```kotlin
+// Inside a suspend function or coroutine scope
 val key = RawAesKey(keyBytes) // 32 bytes from a secure key-management layer
 val aes = Aes256Gcm()
 
@@ -58,7 +59,7 @@ val clearBytes = aes.decrypt(
 )
 ```
 
-For serializable models, use `SecurityJson` to encode/decode JSON before/after encryption.
+For serializable models, use `SecurityJson` to encode/decode JSON before/after encryption, or use `SecurityManager` for high-level object operations.
 
 ## Wire format
 

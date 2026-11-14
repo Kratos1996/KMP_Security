@@ -38,7 +38,7 @@ class SecuritySessionConcurrencyTest {
         try {
             val key = session.responseKey
             val plaintext = "server response".encodeToByteArray()
-            val aad = "yralfood-security/v1|test-session|s2c|0".encodeToByteArray()
+            val aad = "kmp-security/v1|test-session|s2c|0".encodeToByteArray()
             val encrypted = aes.encrypt(plaintext, key, aad)
             val message = SequencedCiphertext(sequence = 0, payload = encrypted)
 

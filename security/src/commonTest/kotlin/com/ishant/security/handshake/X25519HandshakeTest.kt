@@ -52,7 +52,7 @@ class X25519HandshakeTest {
             digest = SHA256,
             outputSize = 256.bits,
             salt = salt,
-            info = "yralfood-security/v1/$sessionId/$label".encodeToByteArray()
+            info = "kmp-security/v1/$sessionId/$label".encodeToByteArray()
         ).deriveSecretToByteArray(serverShared)
 
         val request = session.encryptRequest("hello backend".encodeToByteArray())
@@ -61,14 +61,14 @@ class X25519HandshakeTest {
         val requestClear = serverAes.decrypt(
             request.payload,
             com.ishant.security.keys.RawAesKey(serverKey("client-to-server")),
-            "yralfood-security/v1|$sessionId|c2s|0".encodeToByteArray()
+            "kmp-security/v1|$sessionId|c2s|0".encodeToByteArray()
         )
         assertEquals("hello backend", requestClear.decodeToString())
 
         val responsePayload = serverAes.encrypt(
             "hello app".encodeToByteArray(),
             com.ishant.security.keys.RawAesKey(serverKey("server-to-client")),
-            "yralfood-security/v1|$sessionId|s2c|0".encodeToByteArray()
+            "kmp-security/v1|$sessionId|s2c|0".encodeToByteArray()
         )
         val response = SequencedCiphertext(0L, responsePayload)
         assertEquals("hello app", session.decryptResponse(response).decodeToString())

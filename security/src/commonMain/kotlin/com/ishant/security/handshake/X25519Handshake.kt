@@ -69,7 +69,7 @@ class X25519Handshake {
                 val hkdf = provider.get(HKDF)
 
                 suspend fun derive(direction: String): RawAesKey {
-                    val info = ("yralfood-security/v1/${serverHello.sessionId}/$direction").encodeToByteArray()
+                    val info = ("kmp-security/v1/${serverHello.sessionId}/$direction").encodeToByteArray()
                     val keyBytes = hkdf.secretDerivation(
                         digest = SHA256,
                         outputSize = 256.bits,
