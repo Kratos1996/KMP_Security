@@ -43,7 +43,7 @@ val generateSecurityBuildConfig = tasks.register("generateSecurityBuildConfig", 
 }
 
 group = "io.github.kratos1996"
-version = "1.0.0"
+version = "1.0.1"
 
 kotlin {
     androidTarget {
@@ -95,7 +95,7 @@ android {
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.kratos1996", "kmp-security", "1.0.0")
+    coordinates("io.github.kratos1996", "kmp-security", "1.0.1")
 
     pom {
         name.set("KMP_Security")
