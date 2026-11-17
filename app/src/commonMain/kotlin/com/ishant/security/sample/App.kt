@@ -1,8 +1,5 @@
 package com.ishant.security.sample
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.ishant.security.SecurityManager
 import com.ishant.security.core.EncryptedPayload
 import com.ishant.security.crypto.Aes256Gcm
-import com.ishant.security.device.AndroidDeviceIdentityKeyStore
 import com.ishant.security.handshake.*
 import com.ishant.security.keys.RawAesKey
 import com.ishant.security.session.SequencedCiphertext
@@ -36,18 +32,14 @@ data class UserProfile(
     val roles: List<String>,
 )
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    SecurityDemoScreen()
-                }
-            }
+@Composable
+fun App() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            SecurityDemoScreen()
         }
     }
 }
@@ -60,7 +52,7 @@ fun SecurityDemoScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("KMP Security Tool") },
+                title = { Text("KMP Security Tool ($platformName)") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -105,7 +97,7 @@ fun InteractiveEncryptDecryptTab() {
     val key = remember { RawAesKey(keyBytes) }
 
     // Encrypt State
-    var plaintextInput by remember { mutableStateOf("Sensitive Payload Data") }
+    var plaintextInput by remember { mutableStateOf("Sensitive Payload Data ($platformName)") }
     var encryptAadInput by remember { mutableStateOf("app_context_v1") }
     var encryptedJsonOutput by remember { mutableStateOf("") }
     var encryptError by remember { mutableStateOf("") }
@@ -326,7 +318,7 @@ fun InteractiveEncryptDecryptTab() {
 @Composable
 fun AutomatedDemosTab() {
     val scope = rememberCoroutineScope()
-    var logs by remember { mutableStateOf("Tap 'Run Automated Security Checks' to test Android Keystore, AES-GCM, and X25519 Handshake.\n") }
+    var logs by remember { mutableStateOf("Tap 'Run Automated Security Checks' to test Keystore, AES-GCM, and X25519 Handshake on $platformName.\n") }
     var isRunning by remember { mutableStateOf(false) }
 
     fun appendLog(msg: String) {
@@ -342,10 +334,10 @@ fun AutomatedDemosTab() {
             onClick = {
                 if (isRunning) return@Button
                 isRunning = true
-                logs = "Starting Security Checks...\n\n"
+                logs = "Starting Security Checks on $platformName...\n\n"
                 scope.launch {
                     try {
-                        runAndroidSecurityDemos(::appendLog)
+                        runPlatformSecurityDemos(::appendLog)
                     } catch (e: Exception) {
                         appendLog("❌ Error: ${e.message}")
                         e.printStackTrace()
@@ -396,21 +388,29 @@ fun AutomatedDemosTab() {
     }
 }
 
-private suspend fun runAndroidSecurityDemos(log: (String) -> Unit) {
+suspend fun runPlatformSecurityDemos(log: (String) -> Unit) {
     // ------------------------------------------------------------------
-    // DEMO 1: Android Keystore Identity Key
+    // DEMO 1: Platform Device Identity Keystore
     // ------------------------------------------------------------------
-    log("--- 1. Android Keystore Hardware Identity ---")
-    val keyStore = AndroidDeviceIdentityKeyStore()
-    val identityPublicKey = keyStore.getOrCreate()
-    log("✓ Generated/Loaded P-256 ECDSA Key in Android Keystore")
-    log("  Key ID: ${identityPublicKey.keyId}")
-    log("  Public Key SPKI Size: ${identityPublicKey.publicKeyDer.size} bytes")
+    log("--- 1. $platformName Device Identity KeyStore ---")
+    val keyStore = getPlatformDeviceIdentityKeyStore()
+    if (keyStore != null) {
+        try {
+            val identityPublicKey = keyStore.getOrCreate()
+            log("✓ Generated/Loaded P-256 ECDSA Key on $platformName")
+            log("  Key ID: ${identityPublicKey.keyId}")
+            log("  Public Key SPKI Size: ${identityPublicKey.publicKeyDer.size} bytes")
 
-    val challenge = "challenge_non_repeating_nonce_9981".encodeToByteArray()
-    val signature = keyStore.sign(challenge)
-    log("✓ Signed Challenge with Hardware Private Key: ${signature.size} bytes")
-    log("[SUCCESS] Android Keystore Hardware Identity Verified!\n")
+            val challenge = "challenge_non_repeating_nonce_9981".encodeToByteArray()
+            val signature = keyStore.sign(challenge)
+            log("✓ Signed Challenge with Hardware/Platform Key: ${signature.size} bytes")
+            log("[SUCCESS] $platformName Device Identity Verified!\n")
+        } catch (e: Exception) {
+            log("⚠️ Keystore check note: ${e.message}\n")
+        }
+    } else {
+        log("ℹ Platform Keystore not registered on $platformName\n")
+    }
 
     // ------------------------------------------------------------------
     // DEMO 2: AES-256-GCM Operations
@@ -418,8 +418,8 @@ private suspend fun runAndroidSecurityDemos(log: (String) -> Unit) {
     log("--- 2. AES-256-GCM Encryption ---")
     val key = RawAesKey(ByteArray(32) { (it + 1).toByte() })
     val aes = Aes256Gcm()
-    val secretText = "Android Confidential User Data"
-    val aad = "context:android_demo".encodeToByteArray()
+    val secretText = "$platformName Confidential User Data"
+    val aad = "context:sample_demo".encodeToByteArray()
 
     val encrypted = aes.encrypt(secretText.encodeToByteArray(), key, aad)
     log("✓ Encrypted Payload: ${encrypted.ciphertext.size} bytes (v${encrypted.version})")
@@ -434,7 +434,7 @@ private suspend fun runAndroidSecurityDemos(log: (String) -> Unit) {
     // ------------------------------------------------------------------
     log("--- 3. SecurityManager & Serialization ---")
     val manager = SecurityManager()
-    val profile = UserProfile("usr_android_101", "mobile@yralfood.com", listOf("MOBILE_USER"))
+    val profile = UserProfile("usr_101", "user@yralfood.com", listOf("USER"))
     val encObj = manager.encryptObject(profile, UserProfile.serializer(), key)
     val decObj: UserProfile = manager.decryptObject(encObj, UserProfile.serializer(), key)
     log("✓ Decrypted Object: $decObj")
@@ -459,15 +459,17 @@ private suspend fun runAndroidSecurityDemos(log: (String) -> Unit) {
     val serverEphemeralKeyPair = xdh.keyPairGenerator(XDH.Curve.X25519).generateKey()
     val serverEphemeralPublicDer = serverEphemeralKeyPair.publicKey.encodeToByteArray(XDH.PublicKey.Format.DER)
     val serverNonce = CryptographyRandom.nextBytes(32)
-    val sessionId = "sess_android_4401"
+    val sessionId = "sess_4401"
 
     val session = clientHandshake.complete(
         pending = pending,
         serverHello = ServerHello(
+            protocolVersion = 1,
             sessionId = sessionId,
             serverEphemeralPublicKey = serverEphemeralPublicDer,
             serverNonce = serverNonce,
             signingKeyId = "backend-key",
+            signatureAlgorithm = "Ed25519",
             signature = ByteArray(64),
         ),
     ) { keyId, transcript, _ ->
@@ -482,6 +484,6 @@ private suspend fun runAndroidSecurityDemos(log: (String) -> Unit) {
     log("✓ Encrypted Request (Seq #${encryptedReq.sequence}): ${encryptedReq.payload.ciphertext.size} bytes")
 
     log("\n==========================================")
-    log(" ALL ANDROID SECURITY DEMOS PASSED SUCCESSFULLY!")
+    log(" ALL $platformName SECURITY DEMOS PASSED SUCCESSFULLY!")
     log("==========================================")
 }

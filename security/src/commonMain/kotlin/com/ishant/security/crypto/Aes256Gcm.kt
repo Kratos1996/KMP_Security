@@ -18,6 +18,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class Aes256Gcm {
     private val aesGcm = CryptographyProvider.Default.get(AES.GCM)
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun encrypt(
         plaintext: ByteArray,
         key: RawAesKey,
@@ -39,6 +40,7 @@ class Aes256Gcm {
         }
     }
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun decrypt(
         payload: EncryptedPayload,
         key: RawAesKey,

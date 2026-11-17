@@ -12,12 +12,15 @@ import kotlinx.serialization.Serializable
  */
 interface DeviceIdentityKeyStore {
     /** Returns the existing installation key or creates it exactly once. */
+    @Throws(Throwable::class)
     suspend fun getOrCreate(): DeviceIdentityPublicKey
 
     /** Signs a server-provided, single-use registration/authentication challenge. */
+    @Throws(Throwable::class)
     suspend fun sign(challenge: ByteArray): ByteArray
 
     /** Deletes the local identity only for explicit device de-registration/reset. */
+    @Throws(Throwable::class)
     suspend fun delete()
 }
 

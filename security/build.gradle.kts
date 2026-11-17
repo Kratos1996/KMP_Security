@@ -43,7 +43,7 @@ val generateSecurityBuildConfig = tasks.register("generateSecurityBuildConfig", 
 }
 
 group = "io.github.kratos1996"
-version = "1.0.2"
+version = "1.0.3"
 
 kotlin {
     androidTarget {
@@ -56,7 +56,7 @@ kotlin {
 
     targets.withType<KotlinNativeTarget>().configureEach {
         binaries.framework {
-            baseName = "Security"
+            baseName = "KMPSecurity"
             isStatic = true
         }
     }
@@ -97,7 +97,7 @@ mavenPublishing {
     if (project.hasProperty("signing.keyId") || project.hasProperty("signing.gnupg.key") || project.hasProperty("signing.secretKeyRingFile")) {
         signAllPublications()
     }
-    coordinates("io.github.kratos1996", "kmp-security", "1.0.2")
+    coordinates("io.github.kratos1996", "kmp-security", "1.0.3")
 
     pom {
         name.set("KMP_Security")

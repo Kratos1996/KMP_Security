@@ -17,6 +17,7 @@ class X25519Handshake {
     private val provider = CryptographyProvider.Default
     private val xdh = provider.get(XDH)
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun begin(): PendingClientHandshake {
         val pair = xdh.keyPairGenerator(XDH.Curve.X25519).generateKey()
         val hello = ClientHello(
@@ -26,6 +27,7 @@ class X25519Handshake {
         return PendingClientHandshake(hello, pair.privateKey)
     }
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun complete(
         pending: PendingClientHandshake,
         serverHello: ServerHello,

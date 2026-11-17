@@ -7,6 +7,7 @@ import com.ishant.security.keys.RawAesKey
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Direction-separated keys, session-bound AAD and strict in-order response checks.
@@ -29,6 +30,7 @@ class SecuritySession internal constructor(
     private var nextResponseSequence = 0L
     private var closed = false
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun encryptRequest(plaintext: ByteArray): SequencedCiphertext =
         requestMutex.withLock {
             ensureOpen()
@@ -41,6 +43,7 @@ class SecuritySession internal constructor(
             SequencedCiphertext(sequence, payload)
         }
 
+    @Throws(SecurityError::class, CancellationException::class)
     suspend fun decryptResponse(message: SequencedCiphertext): ByteArray =
         responseMutex.withLock {
             ensureOpen()

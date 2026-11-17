@@ -11,15 +11,16 @@ A Kotlin Multiplatform security foundation for Compose Multiplatform and native 
 
 **Package:** `com.ishant.security`  
 **Modules:**  
-- `:security` — Core KMP library (cryptography, key abstractions, hardware identity, serialization helpers, handshake, and tests).  
-- `:app` — Android Application with Jetpack Compose UI for interactive encryption/decryption and automated security checks.  
+- `:security` — Core KMP library (cryptography, key abstractions, hardware identity, serialization helpers, handshake, and tests). Contains all crypto and keystore implementations (`AndroidDeviceIdentityKeyStore`, `IosDeviceIdentityKeyStore`, and `JvmDeviceIdentityKeyStore`).  
+- `:app` — Unified Compose Multiplatform application sharing the exact same Compose UI (`commonMain/App.kt`) across Android, Desktop, and iOS.  
+- `iosApp` — Xcode iOS project wrapping the shared Compose Multiplatform UI (`ComposeApp.framework`) inside a standard `ComposeUIViewController`.  
 **Cipher:** AES-256-GCM  
 **Handshake:** Ephemeral X25519 + HKDF-SHA256 + Ed25519 Transcript Signatures  
-**Device Identity:** Android Keystore (Android) & Secure Enclave (iOS) P-256 ECDSA  
+**Device Identity:** Android Keystore (Android), Secure Enclave (iOS) & Standard JCE KeyStore (JVM/Desktop) P-256 ECDSA  
 
 ## Status
 
-Security foundation with AES-256-GCM encryption and an authenticated ephemeral X25519 + HKDF-SHA256 handshake protocol. This repository is structured as a Kotlin Multiplatform library with a companion Android sample application.
+Security foundation with AES-256-GCM encryption and an authenticated ephemeral X25519 + HKDF-SHA256 handshake protocol. This repository is structured as a Kotlin Multiplatform library with a unified Compose Multiplatform sample application running on Android, Desktop, and iOS.
 
 ## Installation
 
@@ -59,13 +60,21 @@ dependencies {
 
 ```
 KMP_Security/
-├── security/                # Core KMP Security Library
+├── security/                # Core KMP Security Library (All crypto and keystore logic)
 │   ├── src/commonMain/      # AES-256-GCM, SecurityManager, Handshake, Session, Models
 │   ├── src/androidMain/     # AndroidDeviceIdentityKeyStore (Android Keystore P-256 ECDSA)
 │   ├── src/iosMain/         # IosDeviceIdentityKeyStore (Secure Enclave P-256 ECDSA)
-│   └── src/commonTest/      # 20+ Cross-platform unit tests
-└── app/                     # Android Demo & Interactive Testing App (Jetpack Compose)
-    └── src/main/            # Interactive Encrypt/Decrypt tool + Hardware Keystore Demo
+│   ├── src/jvmMain/         # JvmDeviceIdentityKeyStore (JCA ECDSA P-256 file/memory keystore)
+│   ├── src/commonTest/      # Cross-platform unit tests
+│   └── src/jvmTest/         # JVM Keystore & crypto test suite
+├── app/                     # Unified Compose Multiplatform Sample Application
+│   ├── src/commonMain/      # Shared Compose UI (App.kt with Tabs: Encrypt/Decrypt & Automated Demos)
+│   ├── src/androidMain/     # Android entry point (MainActivity.kt)
+│   ├── src/desktopMain/     # Desktop entry point (Main.kt)
+│   └── src/iosMain/         # iOS entry point (MainViewController.kt -> ComposeUIViewController)
+└── iosApp/                  # Xcode iOS Shell
+    ├── iosApp/              # Hosts ComposeView (ContentView.swift -> MainViewController())
+    └── iosApp.xcodeproj     # Xcode project embedding ComposeApp.framework
 ```
 
 ## Key Features
@@ -139,24 +148,54 @@ The `:app` module provides a Jetpack Compose UI for testing the security library
 - **Interactive Encrypt / Decrypt Tool:** Type custom text, encrypt using `AES-256-GCM`, copy JSON payload to Android Clipboard, paste ciphertext, and decrypt back to plaintext.
 - **Automated Security Checks:** Runs hardware Keystore key generation, challenge signing, serialization, and X25519 handshake session tests with execution logs.
 
-### Running the App
+## Unified Sample Application (`:app`)
 
-Select the **`app`** run configuration in Android Studio and deploy to your connected device/emulator, or build from the command line:
+The `:app` module provides a single, unified Compose Multiplatform UI (`app/src/commonMain/kotlin/com/ishant/security/sample/App.kt`) that runs natively on **Android**, **Desktop (JVM)**, and **iOS**:
+
+- **Tab 1 — Encrypt / Decrypt Workbench:** Live, interactive payload encryption and decryption with optional Associated Authenticated Data (AAD) and one-click clipboard copying.
+- **Tab 2 — Automated Security Checks:** One-click execution of automated checks verifying AES-256-GCM roundtrips, authentication tag tampering rejection, JSON payload parsing, ephemeral X25519 authenticated handshakes with Ed25519 transcript signing, and platform-specific Device Identity KeyStore (Android Keystore, Secure Enclave, or JVM KeyStore).
+
+### Running on Android
 
 ```bash
 ./gradlew :app:assembleDebug
 ```
 
-## Build & Test Commands
-
-Run unit tests across all common and platform targets:
+### Running on Desktop (JVM)
 
 ```bash
-# Run all unit tests in the security module
-./gradlew :security:test
+# Launch Compose Desktop window
+./gradlew :app:desktopRun
 
-# Build Android App APK
-./gradlew :app:assembleDebug
+# Or package standalone executable UberJar
+./gradlew :app:packageUberJarForCurrentOS
+```
+
+### Running on iOS
+
+The `iosApp` directory hosts a standard Xcode wrapper that displays the shared Compose Multiplatform UI through `ComposeUIViewController`:
+
+```bash
+# Build the Xcode project for iOS Simulator
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination "platform=iOS Simulator,name=iPhone 18 Pro" build CODE_SIGNING_ALLOWED=NO
+
+# Or open in Xcode:
+open iosApp/iosApp.xcodeproj
+```
+
+## Build & Test Commands
+
+Run unit tests across all platforms:
+
+```bash
+# Run JVM tests (including JvmDeviceIdentityKeyStore tests)
+./gradlew :security:jvmTest
+
+# Run Android unit tests
+./gradlew :security:testDebugUnitTest
+
+# Run iOS simulator native tests
+./gradlew :security:iosSimulatorArm64Test
 ```
 
 See [SECURITY.md](SECURITY.md), [SECURITY_PROTOCOL.md](SECURITY_PROTOCOL.md), and [CHANGELOG.md](CHANGELOG.md).
